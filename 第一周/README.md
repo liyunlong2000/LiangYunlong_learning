@@ -33,3 +33,17 @@ trans_b:是否对矩阵B进行转置
 
 ## 参考链接
 [有关CUBLAS中的矩阵乘法函数](https://www.cnblogs.com/cuancuancuanhao/p/7763256.html)
+
+# CUDA硬件基础
+主要介绍CUDA编程中所需的GPU相关知识。
+
+## GPU架构
+### 为什么需要GPU?
+### 三种方法提升GPU的处理速度
+### 实际GPU设计举例
+### GPU的存储器设计
+
+## GPU编程模型
+### CPU和GPU互动模式
+### GPU线程组织模型
+### GPU存储模型
