@@ -40,7 +40,7 @@ trans_b:是否对矩阵B进行转置
 CPU的设计以逻辑处理和计算为主，核心的设计针对逻辑进行了特定优化，适用于串行处理数。为了解决图像、气象等领域中的计算问题，产生了GPU。其适合大规模并行处理数据。
 ## 实际GPU设计举例
 ![QQ截图20220818103209](https://user-images.githubusercontent.com/56336922/185279920-a72b82cc-74a8-4e96-b1b4-9f4dd8ff03d0.png)
-上图为GTX 480中一个核心，每个黄色方块代表一个计算单元，类似于CPU中ALU。十二个计算单元为一组，每一组共享一个指令流，由橙色方块进行取指、译码。执行上下文中包含若干个需要完成的任务。每个SM含有一块共享内存，由该SM中所有计算单元所共享。
+上图为GTX 480中一个核心，每个黄色方块代表一个处理单元，类似于CPU中ALU。十二个处理单元为一组，每一组共享一个指令流，由橙色方块进行取指、译码。执行上下文中包含若干个需要完成的任务。每个SM含有一块共享内存，由该SM中所有处理单元所共享。
 ## GPU的存储器设计
 ![QQ截图20220818104329](https://user-images.githubusercontent.com/56336922/185281405-5b2ce319-9e73-4474-918e-c98de0948790.png)
 
@@ -49,6 +49,10 @@ CPU的设计以逻辑处理和计算为主，核心的设计针对逻辑进行�
 ![QQ截图20220818105050](https://user-images.githubusercontent.com/56336922/185282317-457b7655-8d24-4ae7-abd3-0144886aca9a.png)
 
 上图为GPU存储器硬件上层次结构图，其中WorkLtem相当于一个计算单元，Compute Unit相当于一个SM。这样绿色方块相当于共享内存，橘色方块相当于L2缓存，红色方块为显存。
+## 参考资料
+[NVIDIA CUDA初级教程视频](https://www.bilibili.com/video/BV1kx411m7Fk?p=5&spm_id_from=333.1007.top_right_bar_window_history.content.click&vd_source=d759cf8f50c820c1f20e1c9049769dbc)
+
+# cude基础
 ## CPU和GPU交互模式
 ![QQ截图20220818105643](https://user-images.githubusercontent.com/56336922/185283088-203b3c46-b97a-418f-b038-96fabfdabafd.png)
 如上图所示，CPU和GPU有各自物理内存空间，通过PCIE总线互连。
@@ -69,10 +73,60 @@ CPU的设计以逻辑处理和计算为主，核心的设计针对逻辑进行�
 ## GPU存储模型
 ![QQ截图20220818111131](https://user-images.githubusercontent.com/56336922/185284814-3b079c74-3acc-43ab-b077-70f8243ddd2a.png)
 
-上图展示了GPU内存和线程的对等关系。每个线程对应私有的寄存器、local memory，每个block对应共享内存，每个grid对应设备的global memory
+上图展示了GPU内存和线程的对等关系。每个线程对应私有的寄存器、local memory(作用域是每个thread，但实际上是global memry中存储空间)，每个block对应共享内存，每个grid对应设备的global memory
 
 ![QQ截图20220818111431](https://user-images.githubusercontent.com/56336922/185285124-67acb06d-cee7-40a1-be5c-6c7403753242.png)
+
+## cuda编程框架
+1. 使用cudaMalloc在device中为输入和输出分配一块内存，然后使用cudaMemcpy将输入从host拷贝到device中
+2. 核函数执行，结果输出到所分配的内存中
+3. 使用cudeMemcpy将输出从device拷贝到host中，然后使用cudaFree释放device中分配的内存
+
+## cuda编程
+### 函数声明
+- __global__ ：表示只能从host端调用，在device端执行
+- __device__ : 表示只能从device端调用，在device端执行
+- __host__ : 表示只能从host端调用，在host端执行
+
+### 向量数据类型
+- char[1-4],uchar[1-4]
+- int[1-4],uint[1-4]
+- long[1-4],ulong[1-4]
+- float[1-4]
+- double1,double2
+
+向量数据类型适用于host和device代码，通过函数make_<type name>构造，例如：
+- int2 i2=make_int2(1,2);
+- float4 f4=make_float4(1.0f,2.0f,3.0f,4.0f);
+  
+通过.x,.y,.z和.w来访问，例如：
+- int x=i2.x
+- int y=i2.y
+
+### 线程同步
+块内线程可以同步，使用_syncthreads创建一个barrier，块内所有线程将会在barrier处同步，以解决数据依赖的问题。块内同步是效率和开销的折中，有利于提高系统的可扩展性。
+  
+### 线程调度
+软件上所启动的线程数往往大于SP的数量，即block中thread数大于SM中SP的数量，不能以block作为一个调度的基本单位，而是以一个更小的单位Warp。Warp是块内的一组线程。每个Warp运行于同一个SM上，是线程调度的基本单位。
+  
+线程调度的目的是延迟隐藏，提高计算效率。
+  ![QQ截图20220818225631](https://user-images.githubusercontent.com/56336922/185432055-a4c1429d-1414-454e-92ab-ae5a185223a1.png)
+
+同一个Warp中的线程执行步调是一致、同步的，对于分支结构，往往会导致部分线程处于停滞状态，计算效率下降。
+  
+对于GT80，每个Warp有32个线程，但每个SM只有8个SP。这样当一个SM调度一个Warp时，分为以下阶段：
+1. 指令已经预备
+2. 第一个周期8个线程进入SPs
+3. 第二、三、四个周期各进入8个线程
+
+因此，分发一个Warp需要四个周期。
+### 内存模型
+ 寄存器是每个线程专用，若增加kernel的寄存器数量，可能会造成block数量减少而使thread数量减少。
+  ![QQ截图20220818231043](https://user-images.githubusercontent.com/56336922/185432018-4c3fc13e-1ba7-4d93-89a5-c97b397a1c70.png)
+
+  上图表示变量的声明。存储器表示变量所对应的存储器，作用域表示变量有效的作用范围，生命期表示变量内存分配和释放的的阶段。
 ## 参考资料
 [NVIDIA CUDA初级教程视频](https://www.bilibili.com/video/BV1kx411m7Fk?p=5&spm_id_from=333.1007.top_right_bar_window_history.content.click&vd_source=d759cf8f50c820c1f20e1c9049769dbc)
 
 [cuda中threadIdx、blockIdx、blockDim和gridDim的使用](https://www.cnblogs.com/tiandsp/p/9458734.html)
+
