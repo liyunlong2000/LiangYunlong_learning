@@ -56,6 +56,14 @@ CPU的设计以逻辑处理和计算为主，核心的设计针对逻辑进行�
 ![QQ截图20220818110103](https://user-images.githubusercontent.com/56336922/185283578-e24b58ed-a197-4493-9cec-1a6563ec072b.png)
 上图展示了GPU的线程组织模型。一个Kernel意为GPU上执行的函数，具有大量的线程。Kernel启动一个grid，包含若干个block，每个block包含若干个线程。一个block内部的线程共享share memory。
 
+- gridDim：dim3类型，表示一个grid中block块的个数
+- blockDim：dim3类型，表示block的大小
+- blockIdx：uint3来下，表示线程所在block的索引
+- threadIdx：uint3类型，表示线程在block中的索引
+
+线程的全局索引为：块地址* 块大小+块内线程地址。块地址由blockIdx和gridDim表示，块大小由blockDim表示，块内线程地址由threadIdx和blockDim表示。
+
+
 ![QQ截图20220818110619](https://user-images.githubusercontent.com/56336922/185284171-f23125d8-bfc5-4c85-b712-acc6773ae4b9.png)
 上图展示了GPU与线程的映射关系。一个线程对应GPU中一个线程处理器(计算单元)，一个block对应GPU中一个Multi-processor(SM),一个gird对应了显示设备(gpu)
 ## GPU存储模型
@@ -64,5 +72,7 @@ CPU的设计以逻辑处理和计算为主，核心的设计针对逻辑进行�
 上图展示了GPU内存和线程的对等关系。每个线程对应私有的寄存器、local memory，每个block对应共享内存，每个grid对应设备的global memory
 
 ![QQ截图20220818111431](https://user-images.githubusercontent.com/56336922/185285124-67acb06d-cee7-40a1-be5c-6c7403753242.png)
-## 参考视频
+## 参考资料
 [NVIDIA CUDA初级教程视频](https://www.bilibili.com/video/BV1kx411m7Fk?p=5&spm_id_from=333.1007.top_right_bar_window_history.content.click&vd_source=d759cf8f50c820c1f20e1c9049769dbc)
+
+[cuda中threadIdx、blockIdx、blockDim和gridDim的使用](https://www.cnblogs.com/tiandsp/p/9458734.html)
