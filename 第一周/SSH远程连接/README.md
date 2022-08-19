@@ -1,0 +1,9 @@
+# SSH连接远程服务器
+1. 按照服务器配置指南进行操作
+2. 相应配置文件为：
+'Host lab
+    HostName 222.195.92.204
+    User lyl
+    Port 2424
+    IdentityFile ~/.ssh/id_rsa'
+3. 按照文档方法远程连接到服务器
