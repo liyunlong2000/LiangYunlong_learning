@@ -129,4 +129,19 @@ CPU的设计以逻辑处理和计算为主，核心的设计针对逻辑进行�
 [NVIDIA CUDA初级教程视频](https://www.bilibili.com/video/BV1kx411m7Fk?p=5&spm_id_from=333.1007.top_right_bar_window_history.content.click&vd_source=d759cf8f50c820c1f20e1c9049769dbc)
 
 [cuda中threadIdx、blockIdx、blockDim和gridDim的使用](https://www.cnblogs.com/tiandsp/p/9458734.html)
+# cuda矩阵乘法例子
+本节以矩阵相乘为例子，学习cuda编程。并且比较CPU版本和GPU版本下矩阵相乘的时间，体会GPU并行运算的加速效果。只考虑常数方阵的情况。
+## CPU版本
+对结果矩阵的(i,j)元素进行遍历，其值为"ik,kj->ij".详细代码见[matrixMul1.cpp](matrixMul1.cpp)
+## GPU版本
+### 未优化版本
+GPU版本的写法参考[cuda编程框架](https://github.com/liyunlong2000/LiangYunlong_learning/edit/main/%E7%AC%AC%E4%B8%80%E5%91%A8/README.md#cuda%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6),每个block块的维度为(32,32),每个grid的维度为(m/32+1,m/32+1),其中m为方阵的宽。核函数的思路为：对于每个thread,找到其在grid中的索引(i,j)，则该thread负责计算结果矩阵的(i,j)元，其值为"ik,kj->ij".需要注意代码中矩阵是用一维float数组表示，写法需要相应修改，详细代码见[matrixMul2.cu](matrixMul2.cu)
+### 优化后版本
+注意到在cuda中分配的内存存储在global memory中，对于结果矩阵的(i,j)元，每个thread从global memory中读取了一行(m个元素)，一列(m个元素),访存次数较多，计算次数占比小，计算效率较低。优化的思路为：每个block对应结果矩阵的一部分，对于block中每个thread，读入两个数据，这样将两个block大小的子矩阵存储到shared memory中。然后将子矩阵相乘的结果加到对应的block中。上述过程执行(m/blockDim.x+1)轮。
+
+对于上述思路，每个thread从global memory中读取了m/block+m/block个元素，访存次数减少，并且访问shared memory的速度较快。需要注意使用_syncthreads()同步线程，从global memory中将数据拷贝到子矩阵中的思路为：先找到元素在grid中索引(i,j)，然后将索引转到一维形式。详细代码见[matrixMul3.cu](matrixMul3.cu)
+### 实验结果
+![image](https://user-images.githubusercontent.com/56336922/185744429-c75d3e9a-3df1-43f5-93f9-d8ef7fedc413.png)
+
+上图展示了三种版本的矩阵乘法在不同维度下的计算效率，单位为ms。可以看到CPU版本下计算效率低下，使用GPU进行计算，效率提高了一百倍。并且优化后的版本计算效率提升明显，今后进行cuda编程需要考虑如何优化访存延迟。
 
