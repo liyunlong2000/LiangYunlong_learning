@@ -140,8 +140,11 @@ GPU版本的写法参考[cuda编程框架](https://github.com/liyunlong2000/Lian
 注意到在cuda中分配的内存存储在global memory中，对于结果矩阵的(i,j)元，每个thread从global memory中读取了一行(m个元素)，一列(m个元素),访存次数较多，计算次数占比小，计算效率较低。优化的思路为：每个block对应结果矩阵的一部分，对于block中每个thread，读入两个数据，这样将两个block大小的子矩阵存储到shared memory中。然后将子矩阵相乘的结果加到对应的block中。上述过程执行(m/blockDim.x+1)轮。
 
 对于上述思路，每个thread从global memory中读取了m/block+m/block个元素，访存次数减少，并且访问shared memory的速度较快。需要注意使用_syncthreads()同步线程，从global memory中将数据拷贝到子矩阵中的思路为：先找到元素在grid中索引(i,j)，然后将索引转到一维形式。详细代码见[matrixMul3.cu](matrixMul3.cu)
-### 实验结果
+## 实验结果
 ![image](https://user-images.githubusercontent.com/56336922/185744429-c75d3e9a-3df1-43f5-93f9-d8ef7fedc413.png)
 
 上图展示了三种版本的矩阵乘法在不同维度下的计算效率，单位为ms。可以看到CPU版本下计算效率低下，使用GPU进行计算，效率提高了一百倍。并且优化后的版本计算效率提升明显，今后进行cuda编程需要考虑如何优化访存延迟。
+## 参考资料
+[矩阵乘法实现](6CUDAProg1.pdf)
 
+[矩阵乘法优化](6CUDAProg2.pdf)
