@@ -135,7 +135,7 @@ CPU的设计以逻辑处理和计算为主，核心的设计针对逻辑进行�
 对结果矩阵的(i,j)元素进行遍历，其值为"ik,kj->ij".详细代码见[matrixMul1.cpp](matrixMul1.cpp)
 ## GPU版本
 ### 未优化版本
-GPU版本的写法参考[cuda编程框架](https://github.com/liyunlong2000/LiangYunlong_learning/edit/main/%E7%AC%AC%E4%B8%80%E5%91%A8/README.md#cuda%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6),每个block块的维度为(32,32),每个grid的维度为(m/32+1,m/32+1),其中m为方阵的宽。核函数的思路为：对于每个thread,找到其在grid中的索引(i,j)，则该thread负责计算结果矩阵的(i,j)元，其值为"ik,kj->ij".需要注意代码中矩阵是用一维float数组表示，写法需要相应修改，详细代码见[matrixMul2.cu](matrixMul2.cu)
+GPU版本的写法参考[cuda编程框架](https://github.com/liyunlong2000/LiangYunlong_learning/tree/main/%E7%AC%AC%E4%B8%80%E5%91%A8#cuda%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6),每个block块的维度为(32,32),每个grid的维度为(m/32+1,m/32+1),其中m为方阵的宽。核函数的思路为：对于每个thread,找到其在grid中的索引(i,j)，则该thread负责计算结果矩阵的(i,j)元，其值为"ik,kj->ij".需要注意代码中矩阵是用一维float数组表示，写法需要相应修改，详细代码见[matrixMul2.cu](matrixMul2.cu)
 ### 优化后版本
 注意到在cuda中分配的内存存储在global memory中，对于结果矩阵的(i,j)元，每个thread从global memory中读取了一行(m个元素)，一列(m个元素),访存次数较多，计算次数占比小，计算效率较低。优化的思路为：每个block对应结果矩阵的一部分，对于block中每个thread，读入两个数据，这样将两个block大小的子矩阵存储到shared memory中。然后将子矩阵相乘的结果加到对应的block中。上述过程执行(m/blockDim.x+1)轮。
 
