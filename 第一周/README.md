@@ -82,6 +82,17 @@ CPU的设计以逻辑处理和计算为主，核心的设计针对逻辑进行�
 2. 核函数执行，结果输出到所分配的内存中
 3. 使用cudeMemcpy将输出从device拷贝到host中，然后使用cudaFree释放device中分配的内存
 
+cudaMalloc的使用实例为:
+```
+float *ad;
+cudaMalloc((void**)&ad,m*m*sizeof(float));
+```
+cudaMemcpy的使用实例为:
+```
+float *cd,*c;
+cudaMemcpy(cd,c,m*m*sizeof(float),cudaMemcpyHostToDevice);
+cudaMemcpy(c,cd,m*m*sizeof(float),cudaMemcpyDeviceToHost);
+```
 ## cuda编程
 ### 函数声明
 - __global__ ：表示只能从host端调用，在device端执行
