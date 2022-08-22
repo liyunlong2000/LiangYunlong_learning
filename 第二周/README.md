@@ -18,7 +18,7 @@ ad[tx*3+ty]
 ad[ty*2+tx]
 ```
 对于连续的三个thread(0,0)、(1,0)和(0,1)，它们所访问的内存为(ad+0)、(ad+1)和(ad+2)。但是(tx,ty)元素不是矩阵的(tx,ty)元。
-具体代码参考[ordertest.cu](ordertest.cu]).
+具体代码参考[ordertest.cu](ordertest.cu).
 # 合并访存
 合并访存可理解为：当warp中线程并行执行时，从global memory中读取的数据按块传输到SM中。这样当warp访问的数据在块中时，就不需要
 额外进行数据传输。
