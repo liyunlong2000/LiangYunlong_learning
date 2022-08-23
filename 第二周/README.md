@@ -169,6 +169,27 @@ __global__ void transpose4(float*ad,float*cd){
 影响计算效率的主要因素。
 
 具体代码参考[matrixTranspose.cu](matrixTranspose.cu)
+# 矩阵乘法访存优化
+参考[第一周中矩阵乘法示例](https://github.com/liyunlong2000/LiangYunlong_learning/tree/main/%E7%AC%AC%E4%B8%80%E5%91%A8#cuda%E7%9F%A9%E9%98%B5%E4%B9%98%E6%B3%95%E4%BE%8B%E5%AD%90)，增加对matrixMul2中写入cd进行优化:
+```
+__global__ void mul1(float* ad,float*bd,float*cd){
+
+        int i=threadIdx.x+(blockDim.x*blockIdx.x);
+        int j=threadIdx.y+(blockDim.y*blockIdx.y);
+        if(i<m && j<m){
+        float sum=0;
+
+        for(int k=0;k<m;k++){
+            sum+=ad[j*m+k]*bd[k*m+i];
+        }
+        cd[j*m+i]=sum;
+        }
+    }
+```
+## 实验结果
+![image](https://user-images.githubusercontent.com/56336922/186126086-c3b5c274-6ac7-4e8b-8e7b-f23d1aead99f.png)
+
+matrixMul4中数据是对matrixMul2中访存进行优化后的结果，单位为ms。从结果可以看出，当cd的访存方式为合并访存时，计算效率提升显著。
 # 参考资料
 [CUDA学习(二)矩阵转置及优化(合并访问、共享内存、bank conflict)](https://zhuanlan.zhihu.com/p/450242129)
 
