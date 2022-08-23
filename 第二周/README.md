@@ -18,10 +18,16 @@ ad[tx*3+ty]
 ad[ty*2+tx]
 ```
 对于连续的三个thread(0,0)、(1,0)和(0,1)，它们所访问的内存为(ad+0)、(ad+1)和(ad+2),访问内存顺序是规则的。但是(tx,ty)元素不是矩阵的(tx,ty)元。
-具体代码参考[ordertest.cu](ordertest.cu).
+
+为了顺序访问内存，可以将(ty,tx)看作矩阵的索引，只需要调换blockSize、gridSize中参数。例如对于一个二维矩阵{{0,1,2}{3,4,5}}和一个blockSize为(3,2)的block而言，
+对于索引为(ty,tx)的thread，要想访问矩阵中的(ty,tx)元，应该按行优先顺序转为一维的序号，就能找到相应的元素。
+```
+ad[ty*2+tx]
+```
+上述只是以另一种坐标系看待矩阵。具体代码参考[ordertest.cu](ordertest.cu).
 # 合并访存
 合并访存可理解为：当warp中线程并行执行时，从global memory中读取的数据按块传输到SM中。这样当warp访问的数据在块中时，就不需要
-额外进行数据传输。
+额外进行数据传输，从而减少访存次数。
 ## 具体例子
 举个例子(假设一次数据传输指的是将32字节的数据从全局内存通过32字节的缓存传输到SM，
 且已知从全局内存转移到缓存的首地址一定是一个最小粒度(此处为32字节)的整数倍
@@ -60,7 +66,7 @@ __global__ void addVec(int *ad,int*bd,int*cd){
     cd[tidx*1024+tidy]=ad[tidx*1024+tidy]+bd[tidx*1024+tidy];
 }
 ```
-第二种方法为：对于全局索引为(tidx,tidy)的thread,其负责将ad(tidy,tidx)与bd(tidy,tidx)相加的结果保存到cd(tidy,tidx)中。
+第二种方法为：参考[cuda列优先](https://github.com/liyunlong2000/LiangYunlong_learning/tree/main/%E7%AC%AC%E4%BA%8C%E5%91%A8#cuda%E4%B8%AD%E5%88%97%E4%BC%98%E5%85%88),以另一种索引方式考虑加法，对于全局索引为(tidy,tidx)的thread,其负责将ad(tidy,tidx)与bd(tidy,tidx)相加的结果保存到cd(tidy,tidx)中。
 ```
 __global__ void addVec1(int *ad,int*bd,int*cd){
     int tx=threadIdx.x,ty=threadIdx.y;
@@ -80,6 +86,89 @@ __global__ void addVec1(int *ad,int*bd,int*cd){
 
 具体代码参考[memAcess.cu](memAcess.cu)
 # shared memory和bank conflict
+下面以矩阵转置为例，讨论合并访存、shared memory和bank conflict对计算效率的影响，学习优化技巧。
+## 矩阵转置
+对于m * n的矩阵，blockSize为(32,32)，考虑不同核函数的耗时。
+### 写入合并版本transpose1
+```
+__global__ void transpose1(float*ad,float*cd){
+    int tx=threadIdx.x,ty=threadIdx.y;
+    int bx=blockIdx.x,by=blockIdx.y;
+    int nx=tx+(bx*blockDim.x),ny=ty+(by*blockDim.y);
+    if(nx<m&&ny<n){
+        cd[nx+ny*m]=ad[nx*n+ny];
+    }
+}
+```
+对于tranpose1，nx是顺序递增的，因此访问global memory中ad是非合并访存，访问global memory中cd是合并访存。
+### 读取合并版本transpose2
+```
+__global__ void transpose2(float*ad,float*cd){
+    int tx=threadIdx.x,ty=threadIdx.y;
+    int bx=blockIdx.x,by=blockIdx.y;
+    int nx=tx+(bx*blockDim.x),ny=ty+(by*blockDim.y);
+    if(nx<n&&ny<m){
+        cd[nx*m+ny]=ad[nx+ny*n];
+    }
+}
+``` 
+对于tranpose2，nx是顺序递增的，因此访问global memory中ad是合并访存，访问global memory中cd是非合并访存。
+### 使用shared memory优化读写合并版本transpose3
+```
+__global__ void transpose3(float*ad,float*cd){
+    __shared__ float sm[bn][bn];
+    int tx=threadIdx.x,ty=threadIdx.y;
+    int bx=blockIdx.x,by=blockIdx.y;
+    int nx=tx+(bx*blockDim.x),ny=ty+(by*blockDim.y);
+    if(nx<n&&ny<m){
+        sm[ty][tx]=ad[nx+ny*n];
+        __syncthreads();
+    }
+    int nx1=tx+(by*blockDim.y),ny1=(bx*blockDim.x)+ty;
+    if(ny1<n&&nx1<m){
+        cd[ny1*m+nx1]=sm[tx][ty];
+    }
+    
+}
+```
+对于tranpose3,sm[bn][bn]的大小与blockSize(32,32)相同。nx是顺序递增的，因此访问global memory中ad是合并访存，访问global memory中cd也是合并访存。
+### 优化shared memory中bank conflict版本transpose4
+```
+__global__ void transpose4(float*ad,float*cd){
+    __shared__ float sm[bn][bn+1];
+    int tx=threadIdx.x,ty=threadIdx.y;
+    int bx=blockIdx.x,by=blockIdx.y;
+    int nx=tx+(bx*blockDim.x),ny=ty+(by*blockDim.y);
+    if(nx<n&&ny<m){
+        sm[ty][tx]=ad[nx+ny*n];
+        __syncthreads();
+    }
+    int nx1=tx+(by*blockDim.y),ny1=(bx*blockDim.x)+ty;
+    if(ny1<n&&nx1<m){
+        cd[ny1*m+nx1]=sm[tx][ty];
+    }
+    
+}
+```
+对于tranpose3,sm的大小为[bn][bn+1]。nx是顺序递增的，因此访问global memory中ad是合并访存，访问global memory中cd也是合并访存，但是消除了bank conflict。
+
+**TODO:说明bank conflict和为什么解决了conflict**
+
+### 实验结果
+![image](https://user-images.githubusercontent.com/56336922/186067941-757a9208-1d13-4c4c-b832-339332f3ab11.png)
+
+上表中单位为ms。
+![image](https://user-images.githubusercontent.com/56336922/186067907-5d0b4c6a-3e83-45b7-be98-b173c2a00bdd.png)
+
+上图中横坐标为矩阵的大小，纵坐标为核函数耗时(ms)，可以得出以下几个结论：
+1. transpose1和transpose2都是一次合并访存和一次非合并访存，但是两者效率差距明显。可能是GPU架构对读取数据做了相关优化，但未
+对写入数据进行优化。
+2. transpose1和transpose3的计算效率相当。使用shared memory虽然能提高访存效率，但是bank conflict和shared memory的写入、读取
+会消耗额外的时间，使得两者之间计算效率相差不大。
+3. transpose4较transpose3计算效率提高显著。通过解决bank conflict之后，计算时间显著减少，这说明bank conflict是shared memory中
+影响计算效率的主要因素。
+
+具体代码参考[matrixTranspose.cu](matrixTranspose.cu)
 # 参考资料
 [CUDA学习(二)矩阵转置及优化(合并访问、共享内存、bank conflict)](https://zhuanlan.zhihu.com/p/450242129)
 
