@@ -157,7 +157,7 @@ __global__ void transpose4(float*ad,float*cd){
 ### 实验结果
 ![image](https://user-images.githubusercontent.com/56336922/186067941-757a9208-1d13-4c4c-b832-339332f3ab11.png)
 
-上表中单位为ms。
+上表中单位为ms，具体数据参考[矩阵转置时间表.xlsx](矩阵转置时间表.xlsx)
 ![image](https://user-images.githubusercontent.com/56336922/186067907-5d0b4c6a-3e83-45b7-be98-b173c2a00bdd.png)
 
 上图中横坐标为矩阵的大小，纵坐标为核函数耗时(ms)，可以得出以下几个结论：
