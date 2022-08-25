@@ -279,3 +279,6 @@ docker import /tmp/ubuntu.tar test/ubuntu:v1
 ```
 - /tmp/ubuntu.tar:文件目录
 - test/ubuntu:v1:镜像名称和标签
+## 参考资料
+[菜鸟教程(docker)](https://www.runoob.com/docker/docker-tutorial.html)
+[Docker入门](https://zhuanlan.zhihu.com/p/23599229)
