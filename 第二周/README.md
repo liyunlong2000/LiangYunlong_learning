@@ -194,3 +194,88 @@ matrixMul4中数据是对matrixMul2中访存进行优化后的结果，单位为
 [CUDA学习(二)矩阵转置及优化(合并访问、共享内存、bank conflict)](https://zhuanlan.zhihu.com/p/450242129)
 
 [NVIDIA CUDA初级教程视频](https://www.bilibili.com/video/BV1kx411m7Fk?p=12&vd_source=d759cf8f50c820c1f20e1c9049769dbc)
+# docker入门
+docker是一个应用容器引擎，我们可以将程序、运行环境和依赖文件打包到容器中，这样方便我们将程序移植到其它平台中，而不需要自己配置程序所需的运行环境。
+
+## docker中基本概念
+- 镜像(images):包含了运行环境的只读模板。是一个最小的root文件系统，为程序提供所需的运行环境。
+- 容器(container):根据镜像创建的实例，可看做运行的Linux系统.
+- 仓库(repository):包含各种镜像的仓库，我们能够将镜像上传到仓库中或从仓库中拉取所需的镜像。
+## docker中基本操作
+![未命名文件 (5)](https://user-images.githubusercontent.com/56336922/186643375-76459282-1652-40c1-b817-ef89f3ff728c.png)
+
+上图展示了docker中基本操作命令。
+### 获取镜像
+我们可以使用docker pull命令从仓库中拉取一个镜像。例如：
+```
+docker pull ubuntu:13.10
+```
+- ubuntu:仓库源的名字
+- 13.10:':'后跟的标签表示其版本
+
+### 推送镜像
+使用docker push将镜像保存到仓库中。例如：
+```
+docker push runoob/ubuntu:18.04
+```
+runoob/ubuntu:18.04: 表示'用户名/仓库名:标签'
+
+### 启动容器
+使用docker run根据镜像创建容器。另外，可使用docker images查看本地中镜像。例如：
+```
+docker run -it ubuntu /bin/bash
+```
+- -it:表示-i和-t，两者一起使用能够以交互的形式操作容器的终端。
+- ubuntu：镜像名
+- /bin/bash： 以命令行的形式进入容器。
+
+- -d:容器在后台运行。
+### 更新镜像
+镜像是一个只读的模板，对由镜像创建的容器进行修改并不会修改镜像。为了更新镜像，我们可以对改动后的容器使用docker comit命令保存为新的镜像。例如：
+```
+docker commit -m="has update" -a="runoob" e218edb10161 runoob/ubuntu:v2
+```
+- -m：表示镜像的描述信息
+- -a：镜像的作者
+- e218edb10161：容器的ID
+- runoob/ubuntu:v2：镜像的名称和版本号
+
+### 构建镜像
+我们可以通过dockerfile文件和docker build命令创建一个镜像。例如：
+```
+FROM    centos:6.7
+MAINTAINER      Fisher "fisher@sudops.com"
+
+RUN     /bin/echo 'root:123456' |chpasswd
+RUN     useradd runoob
+RUN     /bin/echo 'runoob:123456' |chpasswd
+RUN     /bin/echo -e "LANG=\"en_US.UTF-8\"" >/etc/default/local
+EXPOSE  22
+EXPOSE  80
+CMD     /usr/sbin/sshd -D
+```
+上面是一个dockerfile。
+- FROM：后面表示基础的镜像源
+- MAINTAINER：表示镜像作者和信息
+- RUN：构建镜像时执行的命令，会为镜像创建新的图层
+- EXPOSE：容器暴露的端口，能够访问容器内的应用服务
+- CMD：容器启动后执行的命令
+根据dockerfile文件使用docker build命令创建一个镜像。例如：
+```
+docker build -t runoob/centos:6.7 .
+```
+- -t:表示镜像的名称和版本为runoob/centos:6.7
+- .:表示dockerfile所在的目录为当前目录
+### 导出容器
+使用docker export命令将容器导出为.tar文件。例如：
+```
+docker export 1e560fca3906 > ubuntu.tar
+```
+上面命令将ID为1e560fca3906的容器导出为容器快照文件ubuntu.tar
+### 导入容器快照
+使用docker import将容器快照文件导入为镜像。例如：
+```
+docker import /tmp/ubuntu.tar test/ubuntu:v1
+```
+- /tmp/ubuntu.tar:文件目录
+- test/ubuntu:v1:镜像名称和标签
