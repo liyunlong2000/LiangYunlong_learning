@@ -198,9 +198,9 @@ matrixMul4中数据是对matrixMul2中访存进行优化后的结果，单位为
 docker是一个应用容器引擎，我们可以将程序、运行环境和依赖文件打包到容器中，这样方便我们将程序移植到其它平台中，而不需要自己配置程序所需的运行环境。
 
 ## docker中基本概念
-- 镜像(images):包含了运行环境的只读模板。是一个最小的root文件系统，为程序提供所需的运行环境。
-- 容器(container):根据镜像创建的实例，可看做运行的Linux系统.
-- 仓库(repository):包含各种镜像的仓库，我们能够将镜像上传到仓库中或从仓库中拉取所需的镜像。
+- 镜像(images)：包含了运行环境的只读模板。是一个最小的root文件系统，为程序提供所需的运行环境。
+- 容器(container)：根据镜像创建的实例，可看做运行的Linux系统.
+- 仓库(repository)：包含各种镜像的仓库，我们能够将镜像上传到仓库中或从仓库中拉取所需的镜像。
 ## docker中基本操作
 ![未命名文件 (5)](https://user-images.githubusercontent.com/56336922/186643375-76459282-1652-40c1-b817-ef89f3ff728c.png)
 
@@ -210,8 +210,8 @@ docker是一个应用容器引擎，我们可以将程序、运行环境和依�
 ```
 docker pull ubuntu:13.10
 ```
-- ubuntu:仓库源的名字
-- 13.10:':'后跟的标签表示其版本
+- ubuntu：仓库源的名字
+- 13.10：':'后跟的标签表示其版本
 
 ### 推送镜像
 使用docker push将镜像保存到仓库中。例如：
@@ -264,8 +264,8 @@ CMD     /usr/sbin/sshd -D
 ```
 docker build -t runoob/centos:6.7 .
 ```
-- -t:表示镜像的名称和版本为runoob/centos:6.7
-- .:表示dockerfile所在的目录为当前目录
+- -t：表示镜像的名称和版本为runoob/centos:6.7
+- .：表示dockerfile所在的目录为当前目录
 ### 导出容器
 使用docker export命令将容器导出为.tar文件。例如：
 ```
