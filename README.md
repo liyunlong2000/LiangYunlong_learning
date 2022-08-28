@@ -10,3 +10,4 @@
 - 矩阵乘法的访存优化
 - 矩阵转置案例，理解shared memory用法，解决bank conflict
 - 学习docker基本用法
+-swin transformer的推理过程
