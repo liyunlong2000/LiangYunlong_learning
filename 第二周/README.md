@@ -283,3 +283,44 @@ docker import /tmp/ubuntu.tar test/ubuntu:v1
 [菜鸟教程(docker)](https://www.runoob.com/docker/docker-tutorial.html)
 
 [Docker入门](https://zhuanlan.zhihu.com/p/23599229)
+ 
+ 
+# Swin Transfomer
+![image](https://user-images.githubusercontent.com/56336922/187054770-86b86d68-5200-4343-b6bf-87de2471fb11.png)
+上图左边为Swin Transfomer的架构图，右边为Swin Transfomer Block的结构图。
+
+## Swin Transfomer推理过程
+对于Swin Tiny的超参数C为96和block数量为[2,2,6,2]。Patch Size默认为4* 4，Windows size默认为7* 7。
+### Patch Partition & Linear Embedding
+```
+输入图片的尺寸为(B,3,224,224)
+输出张量大小为(B,96,56,56)
+```
+- Patch Partition：将输入张量按patch大小进行划分，并在第二个维度‘3’上拼接。因此输出为(B,3*4*4,224/4,224/4),后两维表示patch的数量，第二维‘48’表示patch的维度。
+
+- Linear Embedding：对patch的维度‘48’映射为C=‘96’。因此输出为(B,96,56,56)
+
+### Stage1 Swin Transformer Block
+```
+输入张量大小为(B,96,56,56)
+输出张量大小为(B,96,56,56)
+```
+两个连续的Swin Transformer Block为一组，以实现window之间的通信。
+
+- Block1：将输入张量的后两维合并，张量变为(B,96,56*56).首先对张量进行window划分，每个window大小为7*7，并在第一维’B’上拼接，变为(8* 8* B,96,56/ 7* 56/ 7),即(64B,96,49).然后对每个window进行MSA操作，先将(64B,96,49)复制三份(64B,96* 3,49),q、k、v的维度为(64B,96,49),根据多头划分为(64B,3,32,49)，最后执行完attention操作变为(64B,7,7,96)。然后通过window reverse变回(B,96,56,56)
+- Block2：与Block1类似，只是SW-MSA中进行窗口移动和掩码操作，维度最终保持不变。
+
+
+
+### Swin Transformer Block&Patch Merging
+上述两个操作合为Swin Transfomer Basic Layer。后面stage2、stage3和stage4中Swin Transformer Block的操作和stage1中类似，不同的是Linear Embedding变为Patch Merging，以stage2中操作为例。
+```
+输入张量大小为(B,96,56,56)
+输出张量大小为(B,192,28,28)
+```
+- Patch Merging：首先每隔一行一列取一个patch，合并为一个大的patch，并在第二维‘96’上拼接,张量变为(B,4*96,56/2,56/2)，即(B,384,28,28)。然后通过1*1的卷积将第二维‘384’变为192，即(B,192,28,28).
+- Swin Transformer Block：类似stage1中操作，输入输出的张量保持不变。
+因此，stage3中输入张量大小为(B,192,28,28)，输出张量大小为(B,384,14,14)。Stage4中输入张量大小为(B,384,14,14)，输出张量大小为(B,768,7,7)
+
+
+
