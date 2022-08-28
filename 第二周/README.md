@@ -296,7 +296,7 @@ docker import /tmp/ubuntu.tar test/ubuntu:v1
 输入图片的尺寸为(B,3,224,224)
 输出张量大小为(B,96,56,56)
 ```
-- Patch Partition：将输入张量按patch大小进行划分，并在第二个维度‘3’上拼接。因此输出为(B,3*4*4,224/4,224/4),后两维表示patch的数量，第二维‘48’表示patch的维度。
+- Patch Partition：将输入张量按patch大小进行划分，并在第二个维度‘3’上拼接。因此输出为(B,3* 4* 4,224/4,224/4),后两维表示patch的数量，第二维‘48’表示patch的维度。
 
 - Linear Embedding：对patch的维度‘48’映射为C=‘96’。因此输出为(B,96,56,56)
 
@@ -307,10 +307,8 @@ docker import /tmp/ubuntu.tar test/ubuntu:v1
 ```
 两个连续的Swin Transformer Block为一组，以实现window之间的通信。
 
-- Block1：将输入张量的后两维合并，张量变为(B,96,56*56).首先对张量进行window划分，每个window大小为7*7，并在第一维’B’上拼接，变为(8* 8* B,96,56/ 7* 56/ 7),即(64B,96,49).然后对每个window进行MSA操作，先将(64B,96,49)复制三份(64B,96* 3,49),q、k、v的维度为(64B,96,49),根据多头划分为(64B,3,32,49)，最后执行完attention操作变为(64B,7,7,96)。然后通过window reverse变回(B,96,56,56)
+- Block1：将输入张量的后两维合并，张量变为(B,96,56* 56).首先对张量进行window划分，每个window大小为7* 7，并在第一维’B’上拼接，变为(8* 8* B,96,56/ 7* 56/ 7),即(64B,96,49).然后对每个window进行MSA操作，先将(64B,96,49)复制三份(64B,96* 3,49),q、k、v的维度为(64B,96,49),根据多头划分为(64B,3,32,49)，最后执行完attention操作变为(64B,96,7,7)。然后通过window reverse变回(B,96,56,56)
 - Block2：与Block1类似，只是SW-MSA中进行窗口移动和掩码操作，维度最终保持不变。
-
-
 
 ### Swin Transformer Block&Patch Merging
 上述两个操作合为Swin Transfomer Basic Layer。后面stage2、stage3和stage4中Swin Transformer Block的操作和stage1中类似，不同的是Linear Embedding变为Patch Merging，以stage2中操作为例。
@@ -318,10 +316,13 @@ docker import /tmp/ubuntu.tar test/ubuntu:v1
 输入张量大小为(B,96,56,56)
 输出张量大小为(B,192,28,28)
 ```
-- Patch Merging：首先每隔一行一列取一个patch，合并为一个大的patch，并在第二维‘96’上拼接,张量变为(B,4*96,56/2,56/2)，即(B,384,28,28)。然后通过1*1的卷积将第二维‘384’变为192，即(B,192,28,28).
+- Patch Merging：首先每隔一行一列取一个patch，合并为一个大的patch，并在第二维‘96’上拼接,张量变为(B,4* 96,56/2,56/2)，即(B,384,28,28)。然后通过1* 1的卷积将第二维‘384’变为192，即(B,192,28,28).
 - Swin Transformer Block：类似stage1中操作，输入输出的张量保持不变。
 因此，stage3中输入张量大小为(B,192,28,28)，输出张量大小为(B,384,14,14)。Stage4中输入张量大小为(B,384,14,14)，输出张量大小为(B,768,7,7)
 ### 参考资料
 [注意力,多头注意力,自注意力](https://zhuanlan.zhihu.com/p/366592542#:~:text=%E7%9B%B8%E6%AF%94%E5%8D%95%E5%A4%B4%E6%B3%A8%E6%84%8F%E5%8A%9B%EF%BC%8C%E5%A4%9A%E5%A4%B4%E6%B3%A8%E6%84%8F%E5%8A%9B%E5%8F%AF%E4%BB%A5%E8%80%83%E8%99%91%E5%88%B0%E6%9B%B4%E5%A4%9A%E5%B1%82%E9%9D%A2%E7%9A%84%E4%BF%A1%E6%81%AF%E3%80%82,%E5%BD%93%E6%B3%A8%E6%84%8F%E5%8A%9B%E7%9A%84query%E5%92%8Ckey%E3%80%81value%E5%85%A8%E9%83%A8%E6%9D%A5%E8%87%AA%E4%BA%8E%E5%90%8C%E4%B8%80%E5%A0%86%E4%B8%9C%E8%A5%BF%E6%97%B6%EF%BC%8C%E5%B0%B1%E7%A7%B0%E4%B8%BA%E8%87%AA%E6%B3%A8%E6%84%8F%E5%8A%9B%E3%80%82%20%E5%A6%82%E4%B8%8B%E5%9B%BE%E6%89%80%E7%A4%BA%EF%BC%8Cquery%E5%92%8Ckey%E3%80%81value%E5%85%A8%E9%83%BD%E6%9D%A5%E6%BA%90%E4%BA%8EX%E3%80%82)
 
 [Swin Transformer详解](https://blog.csdn.net/weixin_41978699/article/details/121572267?spm=1001.2014.3001.5506)
+
+[多头注意力及注意力](https://www.bilibili.com/video/BV15v411W78M/?spm_id_from=333.788&vd_source=d759cf8f50c820c1f20e1c9049769dbc)
+
