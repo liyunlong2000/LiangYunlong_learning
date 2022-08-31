@@ -27,12 +27,14 @@ int bitXor(int x, int y) {
 - 交集：A⋂B=~(~A⋃B)
 ## tmin
 ### 函数要求
+```
 /* 
  * tmin - return minimum two's complement integer 
  *   Legal ops: ! ~ & ^ | + << >>
  *   Max ops: 4
  *   Rating: 1
  */
+```
  返回二进制补码的最小值
  ### 函数实现
  ```
