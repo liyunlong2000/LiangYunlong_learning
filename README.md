@@ -11,3 +11,5 @@
 - 矩阵转置案例，理解shared memory用法，解决bank conflict
 - 学习docker基本用法
 -swin transformer的推理过程
+# 第三周(2022-08-29 -- 2022-09-04)
+- 学习csapp lecture 0-4，开始datalab实验
