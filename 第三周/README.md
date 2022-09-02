@@ -148,3 +148,126 @@ int negate(int x) {
 2. 取x后4位，判断其加上6(0x06)是否产生进位
 
 若x前28位是0x00 00 00 3，后4位加上6(0x06)不产生进位，则x是符合条件的数，返回1.
+## conditional
+### 函数要求
+```
+/* 
+ * conditional - same as x ? y : z 
+ *   Example: conditional(2,4,5) = 4
+ *   Legal ops: ! ~ & ^ | + << >>
+ *   Max ops: 16
+ *   Rating: 3
+ */
+```
+实现条件表达式
+### 函数实现
+```
+int conditional(int x, int y, int z) {
+  int mask=((!!x)<<31)>>31;
+  int res=(mask&y)+(~mask&z);
+  return res;
+}
+```
+设置mask，当x为0时mask为0，当x不为0时mask为-1.这样当x不为0时，用mask与上y，结果为y，~mask与上z，结果为0.当x为0时，用mask与上y，结果为0，~mask与上z，结果为z.
+## isLessOrEqual
+### 函数要求
+```
+/* 
+ * isLessOrEqual - if x <= y  then return 1, else return 0 
+ *   Example: isLessOrEqual(4,5) = 1.
+ *   Legal ops: ! ~ & ^ | + << >>
+ *   Max ops: 24
+ *   Rating: 3
+ */
+```
+实现小于等于函数。
+### 函数实现
+```
+int isLessOrEqual(int x, int y) {
+  int sub1=y+(~x+1);
+  int sub2=sub1>>31;
+  int res1=!sub2;
+
+  int res2=!(y>>31);
+  int flag=!((x^y)>>31);
+
+  //条件判断
+  int mask=((!!flag)<<31)>>31;
+  int res=(mask&res1)+(~mask&res2);
+  return res;
+}
+```
+考虑y-x是否大于等于0，分两部分计算：
+1. x，y同号:判断y-x是否大于等于0，通过取y-x的符号位实现。
+2. x，y异号：判断y是否大于等于0，通过取y的符号位实现。
+然后使用条件表达式返回不同情况的结果。
+## logicalNeg
+### 函数要求
+```
+/* 
+ * logicalNeg - implement the ! operator, using all of 
+ *              the legal operators except !
+ *   Examples: logicalNeg(3) = 0, logicalNeg(0) = 1
+ *   Legal ops: ~ & ^ | + << >>
+ *   Max ops: 12
+ *   Rating: 4 
+ */
+```
+实现!x
+### 函数实现
+```
+int logicalNeg(int x) {
+  int i1=x|(~x+1);
+  int flag=~(i1>>31);
+  int res=flag&1;
+  return res;
+}
+```
+注意到只有0的或上其相反数为0，然后根据其符号位判断x是否为0，为0则返回1，不为0返回1.
+## howManyBits
+### 函数要求
+```
+/* howManyBits - return the minimum number of bits required to represent x in
+ *             two's complement
+ *  Examples: howManyBits(12) = 5
+ *            howManyBits(298) = 10   
+ *             howManyBits(-5) = 4
+ *            howManyBits(0)  = 1
+ * 
+ *            howManyBits(-1) = 1
+ *            howManyBits(0x80000000) = 32
+ *  Legal ops: ! ~ & ^ | + << >>
+ *  Max ops: 90
+ *  Rating: 4
+ */
+```
+计算最少的能够表示x的二进制补码位数。
+### 函数实现
+```
+nt howManyBits(int x) {
+
+  int sign=x>>1;
+  x=(sign&~x)|(~sign&x);
+
+  int c5,c4,c3,c2,c1,c0;
+  c5=(!!(x>>16))<<4;
+  x=x>>c5;
+
+  c4=(!!(x>>8))<<3;
+  x=x>>c4;
+
+  c3=(!!(x>>4))<<2;
+  x=x>>c3;
+
+  c2=(!!(x>>2))<<1;
+  x=x>>c2;
+
+  c1=(!!(x>>1));
+  x=x>>c0;
+
+  c0=!!(x);
+  int res=c5+c4+c3+c2+c1+c0+1;
+  return res;
+}
+```
+注意到，对于正数来说，结果为最高位1的序号+1，对于负数来说，可将其转为相反数，用正数的计算规则计算。采用二分法计算最高位1的序号，先将x右移16位，判断高位是否0，不为0说明1的序号大于等于16，令c5为16，为0说明序号小于16，令c5为0，最后在将x右移c5位.接着依次重复上述步骤，右移8/4/2/1位。最终结果为c5+c4+c3+c2+c1+c0+1。
