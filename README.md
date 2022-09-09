@@ -16,3 +16,4 @@
 - 多头注意力的计算
 # 第四周(2022-09-5 -- 2022-09-011)
 - 进行datalab实验
+- lin1、lin2、proj、reduction和QKV-fused维度布局变换分析
