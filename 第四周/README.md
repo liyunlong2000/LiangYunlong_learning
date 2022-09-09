@@ -1,3 +1,90 @@
+# lin1
+## 代码中lin1
+![image](https://user-images.githubusercontent.com/56336922/189314638-14eca6a6-0218-4ae5-9d4f-6a1d530f9418.png)
+
+- 代码中处理的维度布局为**ui bjni->ubjn**
+## 第一阶段lin1
+![image](https://user-images.githubusercontent.com/56336922/189314876-fa396e11-073e-427d-858d-7dc46d2852cd.png)
+
+- 处理的维度布局为**iu bjni->ubjn**
+- 代码调整:
+  1. 对矩阵A进行转置，从ui->iu
+  2. 改变GEMM调用参数为：
+      - trans_a:N   
+      - trans_b:N      
+      - M:mlp_dim  
+      - N:b*h*w
+      - K=dim   
+      - lda:mlp_dim
+      - ldb:dim     
+      - ldc:mlp_dim
+## 第二阶段lin1
+![image](https://user-images.githubusercontent.com/56336922/189315527-da3c1d5f-d234-4197-8a20-1f289d47b991.png)
+
+- 处理的维度布局为**ui bjni->ubjn**
+- 代码调整:
+  1. 与原代码相同
+## 第三阶段lin1
+![image](https://user-images.githubusercontent.com/56336922/189315729-c2570a99-67ec-4dba-aa15-7bed2a734bdc.png)
+
+- 处理的维度布局为**iu ibjn->ubjn**
+- 代码调整:
+  1. 对矩阵A进行转置，从ui->iu.
+  2. 对矩阵B进行转置，从bjni->ibjn.
+  3. 改变GEMM调用参数为：
+      - trans_a:N   
+      - trans_b:T      
+      - M:mlp_dim  
+      - N:b*h*w
+      - K=dim   
+      - lda:mlp_dim
+      - ldb:b*h*w  
+      - ldc:mlp_dim
+## 第四阶段lin1
+![image](https://user-images.githubusercontent.com/56336922/189315988-b7666821-c6f0-4d9e-9d72-943eb8796603.png)
+
+- 处理的维度布局为**ibjn iu->bjnu**
+- 代码调整:
+  1. 对矩阵A进行转置，从bjni->ibjn
+  2. 对矩阵B进行转置，从ui->iu.
+  3. 改变GEMM调用参数为：
+      - trans_a:N   
+      - trans_b:T      
+      - M:b*h*w
+      - N:mlp_dim
+      - K=dim   
+      - lda:b*h*w
+      - ldb:mlp_dim 
+      - ldc:b*h*w
+  4. 对矩阵C从bjnu->ubjn
+# lin2
+## 代码中lin2
+![image](https://user-images.githubusercontent.com/56336922/189316610-12f12845-9681-4973-94df-2a6d3833f2d7.png)
+
+- 代码中处理的维度布局为**iu bjnu->ibjn**
+## 第一阶段lin2
+![image](https://user-images.githubusercontent.com/56336922/189316763-8c255c06-7001-43e8-80de-fff3975d4d2f.png)
+
+- 处理的维度布局为**iu bjnu->ibjn**
+- 代码调整:
+  1. 与源代码相同
+## 第二、三、四阶段lin2
+![image](https://user-images.githubusercontent.com/56336922/189317000-d8543e71-7940-43ab-b9aa-bfb4b960e0ff.png)
+
+- 处理的维度布局为**ui ubjn->ibjn**
+- 代码调整:
+  1. 对矩阵A进行转置，从iu->ui.
+  2. 对矩阵B进行转置，从bjnu->ubjn.
+  3. 改变GEMM调用参数为：
+      - trans_a:N   
+      - trans_b:T      
+      - M:dim  
+      - N:b*h*w
+      - K:mlp_dim   
+      - lda:dim
+      - ldb:b*h*w   
+      - ldc:dim
+
 # datalab
 ## floatScale2
 ### 函数要求
@@ -139,89 +226,3 @@ unsigned floatPower2(int x) {
 1. 当x $\geq$ 128时,结果发生溢出，返回溢出值0x7f800000。
 2. 当x $\leq$ -127时，结果为非规格化小数或极小的无法表示的数，返回0.
 3. 其余情况，为规格化小数，计算出exp域值，然后左移23位即为结果。
-# lin1
-## 代码中lin1
-![image](https://user-images.githubusercontent.com/56336922/189314638-14eca6a6-0218-4ae5-9d4f-6a1d530f9418.png)
-
-- 代码中处理的维度布局为**ui bjni->ubjn**
-## 第一阶段lin1
-![image](https://user-images.githubusercontent.com/56336922/189314876-fa396e11-073e-427d-858d-7dc46d2852cd.png)
-
-- 处理的维度布局为**iu bjni->ubjn**
-- 代码调整:
-  1. 对矩阵A进行转置，从ui->iu
-  2. 改变GEMM调用参数为：
-      - trans_a:N   
-      - trans_b:N      
-      - M:mlp_dim  
-      - N:b*h*w
-      - K=dim   
-      - lda:mlp_dim
-      - ldb:dim     
-      - ldc:mlp_dim
-## 第二阶段lin1
-![image](https://user-images.githubusercontent.com/56336922/189315527-da3c1d5f-d234-4197-8a20-1f289d47b991.png)
-
-- 处理的维度布局为**ui bjni->ubjn**
-- 代码调整:
-  1. 与原代码相同
-## 第三阶段lin1
-![image](https://user-images.githubusercontent.com/56336922/189315729-c2570a99-67ec-4dba-aa15-7bed2a734bdc.png)
-
-- 处理的维度布局为**iu ibjn->ubjn**
-- 代码调整:
-  1. 对矩阵A进行转置，从ui->iu.
-  2. 对矩阵B进行转置，从bjni->ibjn.
-  3. 改变GEMM调用参数为：
-      - trans_a:N   
-      - trans_b:T      
-      - M:mlp_dim  
-      - N:b*h*w
-      - K=dim   
-      - lda:mlp_dim
-      - ldb:b*h*w  
-      - ldc:mlp_dim
-## 第四阶段lin1
-![image](https://user-images.githubusercontent.com/56336922/189315988-b7666821-c6f0-4d9e-9d72-943eb8796603.png)
-
-- 处理的维度布局为**ibjn iu->bjnu**
-- 代码调整:
-  1. 对矩阵A进行转置，从bjni->ibjn
-  2. 对矩阵B进行转置，从ui->iu.
-  3. 改变GEMM调用参数为：
-      - trans_a:N   
-      - trans_b:T      
-      - M:b*h*w
-      - N:mlp_dim
-      - K=dim   
-      - lda:b*h*w
-      - ldb:mlp_dim 
-      - ldc:b*h*w
-  4. 对矩阵C从bjnu->ubjn
-# lin2
-## 代码中lin2
-![image](https://user-images.githubusercontent.com/56336922/189316610-12f12845-9681-4973-94df-2a6d3833f2d7.png)
-
-- 代码中处理的维度布局为**iu bjnu->ibjn**
-## 第一阶段lin2
-![image](https://user-images.githubusercontent.com/56336922/189316763-8c255c06-7001-43e8-80de-fff3975d4d2f.png)
-
-- 处理的维度布局为**iu bjnu->ibjn**
-- 代码调整:
-  1. 与源代码相同
-## 第二、三、四阶段lin2
-![image](https://user-images.githubusercontent.com/56336922/189317000-d8543e71-7940-43ab-b9aa-bfb4b960e0ff.png)
-
-- 处理的维度布局为**ui ubjn->ibjn**
-- 代码调整:
-  1. 对矩阵A进行转置，从iu->ui.
-  2. 对矩阵B进行转置，从bjnu->ubjn.
-  3. 改变GEMM调用参数为：
-      - trans_a:N   
-      - trans_b:T      
-      - M:dim  
-      - N:b*h*w
-      - K:mlp_dim   
-      - lda:dim
-      - ldb:b*h*w   
-      - ldc:dim
