@@ -12,8 +12,11 @@
 - 学习docker基本用法
 -swin transformer的推理过程
 # 第三周(2022-08-29 -- 2022-09-04)
-- 学习csapp lecture 0-4，开始datalab实验
+- 学习csapp lecture 1-4，开始datalab实验
 - 多头注意力的计算
-# 第四周(2022-09-5 -- 2022-09-011)
+# 第四周(2022-09-5 -- 2022-09-11)
 - 进行datalab实验
-- lin1、lin2、proj、reduction和QKV-fused维度布局变换分析
+- lin1、lin2维度布局变换分析
+- 学习csapp lecture 5,6
+# 第五周(2022-09-12 -- 2022-09-18)
+- proj、reduction和QKV-fused维度布局变换分析
