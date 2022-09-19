@@ -22,4 +22,4 @@
 - proj、reduction和QKV-fused维度布局变换分析
 - 学习词法分析过程
 - 进行编译原理PW1,PW2实验
-- 学习CMakeList的基本用法
+- 学习CMake的基本用法
