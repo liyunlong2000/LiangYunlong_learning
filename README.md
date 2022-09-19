@@ -20,3 +20,6 @@
 - 学习csapp lecture 5,6
 # 第五周(2022-09-12 -- 2022-09-18)
 - proj、reduction和QKV-fused维度布局变换分析
+- 学习词法分析过程
+- 进行编译原理PW1,PW2实验
+- 学习CMakeList的基本用法
