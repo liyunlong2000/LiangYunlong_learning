@@ -7,7 +7,7 @@ SNB（Social Network Benchmark，社交网络基准测试）是LDBC开发的基�
 - 商务智能场景(Business Intelligence)：关注分析查询
 
 ## 测试流程
-本节主要介绍LDBC SNB BI的测试的过程，需要提前下载配置[ldbc\_snb\_bi](https://github.com/ldbc/ldbc_snb_bi)、[ldbc\_snb\_datagen\_spark](https://github.com/ldbc/ldbc_snb_datagen_spark}{ldbc\_snb\_datagen\_spark)。
+本节主要介绍LDBC SNB BI的测试的过程，需要提前下载配置[ldbc\_snb\_bi](https://github.com/ldbc/ldbc_snb_bi)、[ldbc\_snb\_datagen\_spark](https://github.com/ldbc/ldbc_snb_datagen_spark)。
 ### 生成数据集
 进入数据生成器ldbc\_snb\_datagen\_spark目录，设置环境变量。其中SF为数据规模。
 ```
