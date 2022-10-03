@@ -26,6 +26,10 @@ sudo docker run -d --name neo4j_test\   //-d表示容器后台运行 --name指�
 	--env NEO4J_AUTH=neo4j/admin \     //设定数据库的名字为neo4j，访问密码为admin
 	neo4j //指定使用的镜像
 ```
+下面为可以直接终端执行的命令
+```
+sudo docker run -d --name neo4j_test -p 7474:7474 -p 7687:7687 -v /home/neo4j/data:/data -v /home/neo4j/conf:/var/lib/neo4j/conf  -v /home/neo4j/import:/var/lib/neo4j/import --env NEO4J_AUTH=neo4j/admin neo4j
+```
  ## neo4j配置
  使用以下配置使得浏览器能够访问neo4j数据库。
  ```
@@ -87,3 +91,4 @@ docker restart container_name(or container_id)
 # 问题记录
 - 无法挂载配置目录，否则无法启动容器
 - 使用VS远程连接时，需要手动设置端口，以便浏览器能够正确访问
+- 2022/10/3拉取的neo4j容器不需要再配置`neo4j.conf`
