@@ -92,3 +92,5 @@ docker restart container_name(or container_id)
 - 无法挂载配置目录，否则无法启动容器
 - 使用VS远程连接时，需要手动设置端口，以便浏览器能够正确访问
 - 2022/10/3拉取的neo4j容器不需要再配置`neo4j.conf`
+# 参考链接
+[docker安装部署neo4j](https://www.cnblogs.com/caoyusang/p/13610408.html)
